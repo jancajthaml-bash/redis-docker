@@ -2,7 +2,6 @@
 port="6379"
 volume="/data"
 user="redis"
-redis_verion="2.8.23-r0"
 
 run_tests=false
 
@@ -14,10 +13,13 @@ MAINTAINER Jan Cajthaml <jan.cajthaml@gmail.com>
 ENV S6_OVERLAY_VERSION v1.17.1.1
 ENV GODNSMASQ_VERSION 0.9.8
 
-RUN apk add --no-cache linux-headers && \\
-    apk add --no-cache tcl && \\
-    apk add --no-cache curl && \\
-    apk add --no-cache build-base
+RUN addgroup -S ${user} && \\
+    adduser -S -G ${user} ${user}
+
+RUN apk add --no-cache --virtual linux-headers && \\
+    apk add --no-cache --virtual tcl && \\
+    apk add --no-cache --virtual curl && \\
+    apk add --no-cache --virtual build-base
 
 RUN curl -sSL https://github.com/just-containers/s6-overlay/releases/download/\${S6_OVERLAY_VERSION}/s6-overlay-amd64.tar.gz \\
     | tar xvfz - -C / && \\
@@ -25,22 +27,32 @@ RUN curl -sSL https://github.com/just-containers/s6-overlay/releases/download/\$
     chmod +x /bin/go-dnsmasq
 
 RUN wget http://download.redis.io/redis-stable.tar.gz && \\
-    tar xvzf redis-stable.tar.gz && rm -rf redis-stable.tar.gz && \\
-    cd redis-stable && \\
+    mkdir -p /tmp/redis-stable && \\
+    tar -xzf redis-stable.tar.gz -C /tmp/redis-stable --strip-components=1 && \\
+    rm -rf redis-stable.tar.gz && \\
+    cd /tmp/redis-stable && \\
+    grep -q '^#define CONFIG_DEFAULT_PROTECTED_MODE 1\$' src/server.h && \\
+    sed -ri 's!^(#define CONFIG_DEFAULT_PROTECTED_MODE) 1\$!\1 0!' src/server.h && \\
+    grep -q '^#define CONFIG_DEFAULT_PROTECTED_MODE 0\$' src/server.h && \\
     make
+EOF
 
-RUN cd redis-stable && \\
-    (${run_tests} && \\
+$run_tests && cat <<EOF >> Dockerfile
+
+RUN cd /tmp/redis-stable && \\
     rm tests/integration/aof.tcl && \\
     rm tests/integration/logging.tcl && \\
-    mv tests/test_helper.tcl redis-stable/tests/test_helper.tcl.ORIG && \\
+    mv tests/test_helper.tcl tests/test_helper.tcl.ORIG && \\
     egrep -v 'integration/(aof|logging)' tests/test_helper.tcl.ORIG > tests/test_helper.tcl && \\
     rm tests/test_helper.tcl.ORIG && \\
-    make test) || true
+    make test
+EOF
 
-RUN cd redis-stable && \\
+cat <<EOF >> Dockerfile
+
+RUN cd /tmp/redis-stable && \\
     make install && \\
-    rm -rf redis-stable
+    rm -rf /tmp/redis-stable
 
 RUN apk del linux-headers && \\
     apk del tcl && \\
@@ -54,9 +66,11 @@ RUN apk info
 ADD etc /etc
 ADD usr /usr
 
-RUN sed -i -e 's/bind 127.0.0.1/bind 0.0.0.0/' /etc/redis.conf
+# Remove comment to lower size
+RUN (grep  -v ^# /etc/redis.conf | grep -v ^$) > /etc/redis.conf
 
-RUN adduser -D ${user}
+# Local to broadcast
+RUN sed -i -e 's/bind 127.0.0.1/bind 0.0.0.0/' /etc/redis.conf
 
 RUN mkdir -p ${volume} && \\
     mkdir -p /var/lib/redis && \\
@@ -78,5 +92,13 @@ docker build -t trn/redis .
 
 # strip layers
 docker run trn/redis /bin/true
-#docker export $(docker ps -q -n=1) | docker import - trn/redis:latest
+docker export $(docker ps -q -n=1) | docker import - trn/redis:stripped
 
+# publish new
+docker tag $(docker images -q trn/redis:stripped) jancajthaml/redis
+
+[ $(uname) == "Darwin" ] && command -v docker-machine > /dev/null 2>&1 && {
+  docker-machine ssh $(docker-machine active) "sudo udhcpc SIGUSR1 && sudo /etc/init.d/docker restart"
+}
+
+docker push jancajthaml/redis
