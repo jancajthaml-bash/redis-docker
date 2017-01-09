@@ -2,7 +2,7 @@ Compact redis container ( 25.94MB / 10MB compressed )
 
 ## Stack
 
-Source build from [Redis official page](https://redis.io) on top of [Alphine Linux](https://alpinelinux.org) image with services managed by [S6](https://skarnet.org/software/s6).
+Build from source of [Redis official page](https://redis.io/downloado) running on top of lightweight [Alphine Linux](https://alpinelinux.org) with services managed by [S6](http://git.skarnet.org/cgi-bin/cgit.cgi/s6/about/) suite.
 
 ## Usage
 
