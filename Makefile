@@ -21,7 +21,7 @@ tag_git:
 	git push origin release/$(VERSION)
 
 strip:
-	docker export $(NAME):stage | docker import - $(NAME):stripped
+	docker export $$(docker ps -q -n=1) | docker import - $(NAME):stripped
 
 tag: stage strip tag_git
 	docker tag $(NAME):stripped $(NAME):$(VERSION)
