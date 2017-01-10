@@ -1,7 +1,7 @@
 NAME = jancajthaml/redis
 VERSION = 3.2
 
-.PHONY: all image tag_git tag publish
+.PHONY: all image strip tag_git tag publish
 
 all: image
 
@@ -17,8 +17,11 @@ tag_git:
 	git rebase --no-ff --autosquash release/$(VERSION)
 	git push origin release/$(VERSION)
 
-tag: image tag_git
-	docker tag $(NAME):$(VERSION) $(NAME):$(VERSION)
+strip:
+	docker export $(docker ps -q -n=1) | docker import - $(NAME):stripped
+
+tag: image strip tag_git
+	docker tag $(docker images -q $(NAME):stripped) $(NAME):$(VERSION)
 
 publish: tag
 	docker push $(NAME)
