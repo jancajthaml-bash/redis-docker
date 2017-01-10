@@ -67,7 +67,7 @@ ADD etc /etc
 ADD usr /usr
 
 # Remove comment to lower size
-RUN (grep  -v ^# /etc/redis.conf | grep -v ^$) > /etc/redis.conf
+RUN a=\$(sed -e '/^[[:space:]]*\$/d' -e '/^[[:space:]]*#/d' /etc/redis.conf);echo "\$a" > /etc/redis.conf
 
 # Local to broadcast
 RUN sed -i -e 's/bind 127.0.0.1/bind 0.0.0.0/' /etc/redis.conf
@@ -88,17 +88,8 @@ ENTRYPOINT ["/init"]
 CMD []
 EOF
 
-docker build -t trn/redis .
-
-# strip layers
-docker run trn/redis /bin/true
-docker export $(docker ps -q -n=1) | docker import - trn/redis:stripped
-
-# publish new
-docker tag $(docker images -q trn/redis:stripped) jancajthaml/redis
-
 [ $(uname) == "Darwin" ] && command -v docker-machine > /dev/null 2>&1 && {
   docker-machine ssh $(docker-machine active) "sudo udhcpc SIGUSR1 && sudo /etc/init.d/docker restart"
 }
 
-make publish
+make image

@@ -1,5 +1,6 @@
 NAME = jancajthaml/redis
 VERSION = latest
+CORES := $$(getconf _NPROCESSORS_ONLN)
 
 .PHONY: all image tag_git tag publish clean
 
@@ -27,7 +28,7 @@ publish: tag
 	clean
 
 clean:
-	docker images | grep -i "^<none>" | awk '{ print $$3 }' | \
-		xargs -P$$(getconf _NPROCESSORS_ONLN) -I{} docker rmi -f {}
-	orphans=$$(docker volume ls -qf dangling=true)
-	[ $$($$orphans | wc -l) -gt 0 ] && docker volume rm $$orphans || true
+	docker images | grep -i "^<none>" | awk '{ print $$3 }' | xargs -P$(CORES) -I{} docker rmi -f {}
+	docker ps -a | grep Exit | cut -d ' ' -f 1 | xargs -P$(CORES) -I{} docker rm -f {}
+	zombies=$$(docker volume ls -qf dangling=true)
+	[ $$($$zombies | wc -l) -gt 0 ] && docker volume rm $$zombies || true
