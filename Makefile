@@ -14,7 +14,7 @@ tag_test:
 	git add --all
 	git commit -a --allow-empty-message -m ''
 	git rebase -f --no-ff --autosquash release/$(VERSION)
-	git push
+	git push origin release/$(VERSION)
 
 tag:
 	docker tag -f $(NAME):$(VERSION) $(NAME):latest
