@@ -101,4 +101,4 @@ docker tag $(docker images -q trn/redis:stripped) jancajthaml/redis
   docker-machine ssh $(docker-machine active) "sudo udhcpc SIGUSR1 && sudo /etc/init.d/docker restart"
 }
 
-docker push jancajthaml/redis
+make publish
