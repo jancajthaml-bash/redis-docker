@@ -45,7 +45,7 @@ ADD etc /etc
 ADD usr /usr
 
 # Remove comment to lower size
-RUN (grep  -v ^# /etc/redis.conf | grep -v ^$) > /etc/redis.conf
+RUN a=$(sed -e '/^[[:space:]]*$/d' -e '/^[[:space:]]*#/d' /etc/redis.conf);echo "$a" > /etc/redis.conf
 
 # Local to broadcast
 RUN sed -i -e 's/bind 127.0.0.1/bind 0.0.0.0/' /etc/redis.conf
