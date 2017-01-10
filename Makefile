@@ -14,7 +14,7 @@ tag_git:
 	git pull --tags
 	git add --all
 	git commit -a --allow-empty-message -m ''
-	git rebase -f --no-ff --autosquash release/$(VERSION)
+	git rebase --no-ff --autosquash release/$(VERSION)
 	git push origin release/$(VERSION)
 
 tag: image tag_git
