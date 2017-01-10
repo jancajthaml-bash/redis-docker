@@ -5,6 +5,9 @@ VERSION = 3.2
 
 all: image
 
+stage:
+	docker build -t $(NAME):stage .
+
 image:
 	docker build -t $(NAME):$(VERSION) .
 
@@ -18,9 +21,9 @@ tag_git:
 	git push origin release/$(VERSION)
 
 strip:
-	docker export $(NAME):$(VERSION) | docker import - $(NAME):stripped
+	docker export $(NAME):stage | docker import - $(NAME):stripped
 
-tag: image strip tag_git
+tag: stage strip tag_git
 	docker tag $(NAME):stripped $(NAME):$(VERSION)
 
 publish: tag
