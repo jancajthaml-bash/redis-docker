@@ -21,7 +21,7 @@ strip:
 	docker export $(NAME):$(VERSION) | docker import - $(NAME):stripped
 
 tag: image strip tag_git
-	docker tag $(docker images -q $(NAME):stripped) $(NAME):$(VERSION)
+	docker tag $(NAME):stripped $(NAME):$(VERSION)
 
 publish: tag
 	docker push $(NAME)
