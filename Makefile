@@ -1,5 +1,5 @@
 NAME = jancajthaml/redis
-VERSION = 3.2
+VERSION = latest
 
 .PHONY: all image tag_git tag publish clean
 
