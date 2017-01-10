@@ -13,7 +13,7 @@ tag_test:
 	git fetch --tags
 	git add --all
 	git commit -a --allow-empty-message -m ''
-	git rebase -i release/$(VERSION)
+	git rebase release/$(VERSION) --skip
 	git push
 
 tag:
