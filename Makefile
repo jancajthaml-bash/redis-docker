@@ -18,7 +18,7 @@ tag_git:
 	git push origin release/$(VERSION)
 
 tag: image tag_git
-	docker tag -f $(NAME):$(VERSION)
+	docker tag $(NAME):$(VERSION) $(NAME):$(VERSION)
 
 publish: tag
 	docker push $(NAME)
