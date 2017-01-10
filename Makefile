@@ -1,12 +1,9 @@
 NAME = jancajthaml/redis
 VERSION = 3.2
 
-.PHONY: all image strip tag_git tag publish
+.PHONY: all image tag_git tag publish clean
 
-all: image
-
-stage:
-	docker build -t $(NAME):stage .
+all: image clean
 
 image:
 	docker build -t $(NAME):$(VERSION) .
@@ -20,11 +17,17 @@ tag_git:
 	git rebase --no-ff --autosquash release/$(VERSION)
 	git push origin release/$(VERSION)
 
-strip:
+tag: image tag_git
 	docker export $$(docker ps -q -n=1) | docker import - $(NAME):stripped
-
-tag: stage strip tag_git
 	docker tag $(NAME):stripped $(NAME):$(VERSION)
+	docker rmi $(NAME):stripped
 
 publish: tag
 	docker push $(NAME)
+	clean
+
+clean:
+	docker images | grep -i "^<none>" | awk '{ print $$3 }' | \
+		xargs -P$$(getconf _NPROCESSORS_ONLN) -I{} docker rmi -f {}
+	orphans=$$(docker volume ls -qf dangling=true)
+	[ $$($$orphans | wc -l) -gt 0 ] && docker volume rm $$orphans || true
