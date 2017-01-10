@@ -11,17 +11,18 @@ RUN addgroup -S redis && \
 RUN apk add --no-cache --virtual linux-headers && \
     apk add --no-cache --virtual tcl && \
     apk add --no-cache --virtual curl && \
-    apk add --no-cache --virtual build-base
+    apk add --no-cache --virtual make && \
+    apk add --no-cache --virtual gcc && \
+    apk add --no-cache --virtual g++
 
-RUN curl -sSL https://github.com/just-containers/s6-overlay/releases/download/${S6_OVERLAY_VERSION}/s6-overlay-amd64.tar.gz \
-    | tar xvfz - -C / && \
+RUN curl -sSL https://github.com/just-containers/s6-overlay/releases/download/${S6_OVERLAY_VERSION}/s6-overlay-amd64.tar.gz | tar xvfz - -C / && \
     curl -sSL https://github.com/janeczku/go-dnsmasq/releases/download/${GODNSMASQ_VERSION}/go-dnsmasq-min_linux-amd64 -o /bin/go-dnsmasq && \
     chmod +x /bin/go-dnsmasq
 
-RUN wget http://download.redis.io/redis-stable.tar.gz && \
-    mkdir -p /tmp/redis-stable && \
-    tar -xzf redis-stable.tar.gz -C /tmp/redis-stable --strip-components=1 && \
-    rm -rf redis-stable.tar.gz && \
+ENV REDIS_VERSION 3.2
+
+RUN mkdir -p /tmp/redis-stable && \
+    curl -sSL http://download.redis.io/redis-stable.tar.gz | tar xvz --no-same-owner -C /tmp/redis-stable --strip-components 1 -f - && \
     cd /tmp/redis-stable && \
     grep -q '^#define CONFIG_DEFAULT_PROTECTED_MODE 1$' src/server.h && \
     sed -ri 's!^(#define CONFIG_DEFAULT_PROTECTED_MODE) 1$!\1 0!' src/server.h && \
@@ -35,7 +36,9 @@ RUN cd /tmp/redis-stable && \
 RUN apk del linux-headers && \
     apk del tcl && \
     apk del curl && \
-    apk del build-base && \
+    apk del make && \
+    apk del gcc && \
+    apk del g++ && \
     rm -rf /var/cache/*
 
 RUN apk info
@@ -55,7 +58,7 @@ RUN mkdir -p /data && \
     mkdir -p /var/log/redis && \
     chown -R redis:redis /data && \
     chown -R redis:redis /var/lib/redis && \
-    chown -R redis:redis /var/log/redis/
+    chown -R redis:redis /var/log/redis
 
 VOLUME ["/data"]
 

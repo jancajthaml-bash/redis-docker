@@ -11,14 +11,13 @@ image:
 
 tag_git:
 	git checkout -B release/$(VERSION)
-	git branch --set-upstream-to=origin/release/$(VERSION) release/$(VERSION)
-	git pull --tags
 	git add --all
 	git commit -a --allow-empty-message -m ''
 	git rebase --no-ff --autosquash release/$(VERSION)
-	git push origin release/$(VERSION)
+	git push -u origin release/$(VERSION)
 
 tag: image tag_git
+	docker run $(NAME):$(VERSION) /bin/true
 	docker export $$(docker ps -q -n=1) | docker import - $(NAME):stripped
 	docker tag $(NAME):stripped $(NAME):$(VERSION)
 	docker rmi $(NAME):stripped
