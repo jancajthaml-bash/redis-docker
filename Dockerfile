@@ -2,11 +2,13 @@ FROM alpine:latest
 
 MAINTAINER Jan Cajthaml <jan.cajthaml@gmail.com>
 
-ENV S6_OVERLAY_VERSION v1.17.1.1
-ENV GODNSMASQ_VERSION 0.9.8
+ENV S6_OVERLAY_VERSION v1.18.1.5
+ENV GODNSMASQ_VERSION 1.0.7
 
 RUN addgroup -S redis && \
     adduser -S -G redis redis
+
+RUN apk add --update libcap
 
 RUN apk add --no-cache --virtual linux-headers && \
     apk add --no-cache --virtual tcl && \
@@ -16,7 +18,7 @@ RUN apk add --no-cache --virtual linux-headers && \
 RUN curl -sSL https://github.com/just-containers/s6-overlay/releases/download/${S6_OVERLAY_VERSION}/s6-overlay-amd64.tar.gz \
     | tar xvfz - -C / && \
     curl -sSL https://github.com/janeczku/go-dnsmasq/releases/download/${GODNSMASQ_VERSION}/go-dnsmasq-min_linux-amd64 -o /bin/go-dnsmasq && \
-    chmod +x /bin/go-dnsmasq
+    addgroup go-dnsmasq &&     adduser -D -g "" -s /bin/sh -G go-dnsmasq go-dnsmasq &&     setcap CAP_NET_BIND_SERVICE=+eip /bin/go-dnsmasq
 
 RUN wget http://download.redis.io/redis-stable.tar.gz && \
     mkdir -p /tmp/redis-stable && \

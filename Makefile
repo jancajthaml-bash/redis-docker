@@ -18,6 +18,9 @@ tag_git:
 	git rebase --no-ff --autosquash release/$(VERSION)
 	git push origin release/$(VERSION)
 
+run: image
+	docker run $(NAME):$(VERSION) /bin/true
+
 tag: image tag_git
 	docker export $$(docker ps -q -n=1) | docker import - $(NAME):stripped
 	docker tag $(NAME):stripped $(NAME):$(VERSION)
@@ -25,7 +28,7 @@ tag: image tag_git
 
 publish: tag
 	docker push $(NAME)
-	clean
+	make clean
 
 clean:
 	docker images | grep -i "^<none>" | awk '{ print $$3 }' | xargs -P$(CORES) -I{} docker rmi -f {}
