@@ -15,9 +15,9 @@ image:
 tag: image
 	git checkout -B release/$(VERSION)
 	git add --all
-	git commit -a --allow-empty-message -m '' 2> /dev/null || true
+	git commit -a --allow-empty-message -m '' 2> /dev/null || :
 	git rebase --no-ff --autosquash release/$(VERSION)
-	git pull origin release/$(VERSION) 2> /dev/null || true
+	git pull origin release/$(VERSION) 2> /dev/null || :
 	git push origin release/$(VERSION)
 	git checkout -B master
 
