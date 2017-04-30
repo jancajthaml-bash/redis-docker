@@ -6,7 +6,11 @@ VERSION = latest
 all: image
 
 image:
-	docker build -t $(NAME):$(VERSION) .
+	docker build -t $(NAME):stage .
+	docker export $$(docker ps -q -n=1) | docker import - $(NAME):stripped
+	docker tag $(NAME):stripped $(NAME):$(VERSION)
+	docker rmi $(NAME):stripped
+	docker rmi $(NAME):stage
 
 tag: image
 	git checkout -B release/$(VERSION)
@@ -17,8 +21,11 @@ tag: image
 	git push origin release/$(VERSION)
 	git checkout -B master
 
-run: image
-	docker run --rm -it --log-driver none $(NAME):$(VERSION)
+run:
+	docker run --rm -it --log-driver none $(NAME):$(VERSION) redis-server /etc/redis.conf
+
+squash:
+	docker export $(NAME) | docker import - $(NAME):$(VERSION)
 
 upload:
 	docker login -u jancajthaml https://index.docker.io/v1/
