@@ -6,4 +6,4 @@ Build from source of [Redis 3.2](https://redis.io/download) running on top of li
 
 ## Usage
 
-public image from dockerHub `docker pull jancajthaml/redis` or custom build with `sh build_docker.sh`
+public image from dockerHub `docker pull jancajthaml/redis`
