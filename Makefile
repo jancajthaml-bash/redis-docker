@@ -19,7 +19,7 @@ tag_git:
 	git push origin release/$(VERSION)
 
 run: image
-	docker run $(NAME):$(VERSION) /bin/true
+	docker run $(NAME):$(VERSION)
 
 tag: image tag_git
 	docker export $$(docker ps -q -n=1) | docker import - $(NAME):stripped
